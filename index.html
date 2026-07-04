@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LINK営業本部 | ISAI Mouton</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --line:#334155;
+    --txt:#e2e8f0; --sub:#94a3b8; --dim:#64748b;
+    --amber:#fbbf24; --sky:#38bdf8; --green:#34d399; --red:#f87171; --violet:#a78bfa;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--txt);font-family:"Hiragino Sans","Noto Sans JP",sans-serif;font-size:14px;padding-bottom:30px}
+  header{padding:16px 16px 10px;display:flex;justify-content:space-between;align-items:baseline}
+  header h1{font-size:16px;letter-spacing:.12em}
+  #syncDot{font-size:10px;color:var(--dim)}
+  #syncDot.busy{color:var(--amber)}
+  #syncDot.err{color:var(--red)}
+  .tabs{display:flex;gap:6px;padding:0 16px 12px;position:sticky;top:0;background:var(--bg);z-index:10;padding-top:6px}
+  .tab{flex:1;text-align:center;padding:9px 0;border-radius:10px;background:var(--panel);color:var(--sub);font-weight:700;font-size:12px;border:1px solid var(--line)}
+  .tab.on{background:var(--amber);color:#1c1917;border-color:var(--amber)}
+  .wrap{padding:0 16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .label{font-size:10px;color:var(--dim);letter-spacing:.15em;font-weight:700;margin-bottom:8px}
+  .goal{display:flex;justify-content:space-between;align-items:flex-end}
+  .goal .big{font-size:40px;font-weight:800;line-height:1}
+  .goal .big small{font-size:14px;color:var(--sub);font-weight:600}
+  .goal .days{text-align:right}
+  .goal .days b{font-size:26px;color:var(--amber)}
+  .bar{height:8px;background:var(--panel2);border-radius:99px;margin-top:12px;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--green));border-radius:99px;transition:width .4s}
+  .barnote{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:5px}
+  .quote{font-size:15px;line-height:1.7;font-weight:600;min-height:48px}
+  .quote-btn{margin-top:10px;font-size:11px;color:var(--amber);background:none;border:1px solid var(--amber);border-radius:99px;padding:5px 14px;font-weight:700}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
+  .stat{background:var(--panel2);border-radius:10px;padding:10px 4px;text-align:center}
+  .stat b{display:block;font-size:20px}
+  .stat span{font-size:9px;color:var(--sub)}
+  input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px;font-size:14px;font-family:inherit}
+  textarea{resize:vertical;min-height:60px}
+  .btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;background:var(--amber);color:#1c1917;font-weight:800;font-size:14px;margin-top:8px}
+  .btn.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .btn.small{width:auto;display:inline-block;padding:7px 14px;font-size:12px;margin:0}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+  .chip{flex-shrink:0;font-size:11px;font-weight:700;padding:6px 12px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--sub)}
+  .chip.on{background:var(--txt);color:#0f172a;border-color:var(--txt)}
+  .person{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+  .person .row{display:flex;justify-content:space-between;align-items:center}
+  .person .nm{font-weight:800;font-size:15px}
+  .person .rel{font-size:11px;color:var(--dim);margin-top:3px;line-height:1.5}
+  .badge{font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;flex-shrink:0;margin-left:8px}
+  .detail{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:none}
+  .person.open .detail{display:block}
+  .stbtns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .stbtn{font-size:11px;font-weight:700;padding:7px 11px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);color:var(--sub)}
+  .stbtn.on{border-color:var(--amber);color:var(--amber)}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);margin-bottom:10px}
+  .toggle input{width:auto}
+  .log{background:var(--panel2);border-radius:10px;padding:10px;margin-bottom:8px}
+  .log .meta{font-size:10px;color:var(--dim);margin-bottom:4px}
+  .log .body{font-size:13px;line-height:1.6;white-space:pre-wrap}
+  .logadd{display:flex;gap:6px;margin-bottom:6px}
+  .logadd select{width:90px;flex-shrink:0}
+  .counter{font-size:11px;color:var(--sub);margin-bottom:8px}
+  .todo{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .todo:last-child{border-bottom:none}
+  .todo input[type=checkbox]{width:20px;height:20px;margin-top:1px;flex-shrink:0}
+  .todo .t{flex:1;font-size:13px;line-height:1.6}
+  .todo.done .t{color:var(--dim);text-decoration:line-through}
+  .todo .del{color:var(--dim);font-size:16px;background:none;border:none;padding:0 4px}
+  .sched{font-size:13px;line-height:2}
+  .sched b{color:var(--amber)}
+  .strategy{font-size:13px;line-height:1.9}
+  .strategy b{color:var(--sky)}
+  .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-weight:800;font-size:12px;padding:10px 20px;border-radius:99px;display:none;z-index:99;max-width:90%}
+  .hidden{display:none!important}
+  #loading{padding:60px 20px;text-align:center;color:var(--sub)}
+  #setupWarn{margin:16px;padding:16px;background:#7f1d1d;border-radius:12px;font-size:13px;line-height:1.8;display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LINK 営業本部</h1>
+  <span id="syncDot">● 同期済</span>
+</header>
+
+<div id="setupWarn">⚠️ API_URLが未設定。index.htmlの上部にあるAPI_URLに、GASのウェブアプリURLを貼ってから使ってね。</div>
+<div id="loading">スプシからデータ読み込み中…</div>
+
+<div id="app" class="hidden">
+<div class="tabs">
+  <button class="tab on" data-tab="mypage">マイページ</button>
+  <button class="tab" data-tab="pipeline">アポ管理</button>
+  <button class="tab" data-tab="otsunagiya">おつなぎ屋</button>
+</div>
+
+<div class="wrap" id="tab-mypage">
+  <div class="card">
+    <div class="label">LINK 会員数 / 目標</div>
+    <div class="goal">
+      <div class="big"><span id="memberNow">-</span><small> / 100人</small></div>
+      <div class="days">残り <b id="daysLeft">--</b> 日<div style="font-size:10px;color:var(--dim)">8/31まで</div></div>
+    </div>
+    <div class="bar"><i id="goalBar" style="width:2%"></i></div>
+    <div class="barnote"><span>コミット目標30人 <span id="commitMark"></span></span><span id="paceNote"></span></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn ghost small" onclick="changeMembers(-1)">−1</button>
+      <button class="btn small" onclick="changeMembers(1)" style="flex:1">会員 +1 🐏</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">今日のマインドセット</div>
+    <div class="quote" id="quote"></div>
+    <button class="quote-btn" onclick="nextQuote()">次の言葉</button>
+  </div>
+  <div class="card">
+    <div class="label">パイプライン現況</div>
+    <div class="grid4" id="statGrid"></div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="tab-pipeline">
+  <div class="chips" id="filterChips"></div>
+  <div class="counter" id="listCounter"></div>
+  <div id="personList"></div>
+  <div class="card">
+    <div class="label">人を追加</div>
+    <input id="newName" placeholder="名前">
+    <div style="height:6px"></div>
+    <input id="newRel" placeholder="関係性メモ">
+    <button class="btn" onclick="addPerson()">追加する</button>
+  </div>
+</div>
+
+<div class="wrap hidden" id="tab-otsunagiya">
+  <div class="card">
+    <div class="label">戦略(固定表示)</div>
+    <div class="strategy">
+      <b>目的:</b> 20代後半〜30代の起業家・副業層と繋がり、DM→説明会の入口を作る<br>
+      <b>柱:</b> リプライ誘発型の問いかけ投稿が最重要。売り込みは書かない<br>
+      <b>導線:</b> 悩み軸投稿 → リプ/DM → 個別トーク → 説明会<br>
+      <b>鉄則:</b> LINKの名前はSNSに出さない(交差禁止ルール)
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">投稿スケジュール</div>
+    <div class="sched">
+      <b>Threads</b> 1日3投稿: 朝7時台(問いかけ) / 昼12時台(気づき・体験) / 夜21時台(共感・本音)<br>
+      <b>Instagramリール</b> 2〜3日に1本: 夜19〜21時
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">やることリスト</div>
+    <div id="todoList"></div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <input id="newTodo" placeholder="タスクを追加">
+      <button class="btn small" style="flex-shrink:0" onclick="addTodo()">追加</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">今日の投稿メモ(下書き置き場)</div>
+    <textarea id="postDraft" placeholder="投稿の下書きをここに。スプシに保存されるからクロッピーが直接読める。" rows="4"></textarea>
+    <button class="btn ghost small" style="margin-top:8px" onclick="saveDraft()">下書きを保存</button>
+  </div>
+</div>
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ★★★ ここにGASのウェブアプリURLを貼る ★★★
+const API_URL = "";
+
+const STATUSES = [
+  {label:"未送信",   color:"#64748b"},
+  {label:"送信済",   color:"#38bdf8"},
+  {label:"返信①",   color:"#fbbf24"},
+  {label:"返信②〜", color:"#f59e0b"},
+  {label:"アポ確定", color:"#34d399"},
+  {label:"説明会済", color:"#a78bfa"},
+  {label:"入会",     color:"#4ade80"},
+  {label:"既読無視", color:"#475569"},
+  {label:"断られた", color:"#f87171"},
+];
+const stOf = l => STATUSES.find(s=>s.label===l) || STATUSES[0];
+
+const QUOTES = [
+ "0か100かじゃない。今日の2通が100点。",
+ "送らなかったLINEの成約率は0%。",
+ "断られるのは在庫確認。次に行くだけ。",
+ "考えるのはクロッピーの仕事。送るのがCEOの仕事。",
+ "既読無視は「今じゃない」ってだけ。人格の否定じゃない。",
+ "はるなさんとの自由な生活は、今日の1通の先にある。",
+ "完璧な文面より、送信済みの下手な文面。",
+ "怖いのは慣れてない証拠。慣れれば作業になる。",
+ "43人は資産。眠らせてる方がもったいない。",
+ "紹介連鎖は1人目から始まる。今日のひとりを大切に。",
+ "数字は嘘をつかない。やった分だけ返ってくる。",
+ "迷ったら送る。判断は相手がしてくれる。",
+];
+
+let S = { people:[], logs:[], todos:[], config:{members:4,draft:""}, filter:"all", quoteIdx:Math.floor(Math.random()*QUOTES.length) };
+
+// ============ 通信 ============
+function setSync(state,msg){
+  const d=document.getElementById("syncDot");
+  d.className=state; 
+  d.textContent = state==="busy" ? "● 保存中…" : state==="err" ? "● "+(msg||"通信エラー") : "● 同期済";
+}
+async function apiGet(){
+  const r = await fetch(API_URL);
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return r.json();
+}
+async function apiPost(payload){
+  setSync("busy");
+  try{
+    const r = await fetch(API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error||"API error");
+    setSync("");
+    return j;
+  }catch(e){
+    setSync("err");
+    showToast("保存失敗: "+e.message+" (電波確認してもう一度)");
+    throw e;
+  }
+}
+
+// ============ 初期化 ============
+async function init(){
+  if(!API_URL){
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("setupWarn").style.display="block";
+    return;
+  }
+  try{
+    const data = await apiGet();
+    S.people=data.people; S.logs=data.logs; S.todos=data.todos;
+    S.config=Object.assign({members:4,draft:""},data.config);
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    renderAll();
+  }catch(e){
+    document.getElementById("loading").textContent="読み込み失敗: "+e.message+" — 電波かAPI_URLを確認してリロードして。";
+  }
+}
+
+// ============ tabs ============
+document.querySelectorAll(".tab").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    ["mypage","pipeline","otsunagiya"].forEach(t=>{
+      document.getElementById("tab-"+t).classList.toggle("hidden", t!==b.dataset.tab);
+    });
+  };
+});
+
+// ============ マイページ ============
+function renderMypage(){
+  const m = Number(S.config.members)||0;
+  document.getElementById("memberNow").textContent = m;
+  const end=new Date(2026,7,31); const today=new Date(); today.setHours(0,0,0,0);
+  const days=Math.max(0,Math.round((end-today)/86400000));
+  document.getElementById("daysLeft").textContent=days;
+  document.getElementById("goalBar").style.width=Math.max(2,Math.min(100,m))+"%";
+  document.getElementById("commitMark").textContent = m>=30?"✅達成":"(あと"+(30-m)+"人)";
+  const need=Math.max(0,100-m);
+  document.getElementById("paceNote").textContent="100人まで 1日"+(days>0?(need/days).toFixed(1):"-")+"人ペース";
+  document.getElementById("quote").textContent=QUOTES[S.quoteIdx%QUOTES.length];
+  const g=document.getElementById("statGrid"); g.innerHTML="";
+  ["未送信","送信済","返信①","返信②〜","アポ確定","説明会済","入会","断られた"].forEach(l=>{
+    const n=S.people.filter(p=>p.status===l).length;
+    g.insertAdjacentHTML("beforeend",`<div class="stat"><b style="color:${stOf(l).color}">${n}</b><span>${l}</span></div>`);
+  });
+}
+async function changeMembers(d){
+  S.config.members=Math.max(0,(Number(S.config.members)||0)+d);
+  renderMypage();
+  await apiPost({action:"setConfig",key:"members",value:S.config.members});
+}
+function nextQuote(){ S.quoteIdx=(S.quoteIdx+1)%QUOTES.length; renderMypage(); }
+
+// ============ アポ管理 ============
+function logsOf(pid){ return S.logs.filter(l=>l.personId===pid); }
+function renderChips(){
+  const c=document.getElementById("filterChips"); c.innerHTML="";
+  const all=[{label:"全員"},...STATUSES];
+  all.forEach(s=>{
+    const key=s.label==="全員"?"all":s.label;
+    const n=key==="all"?S.people.length:S.people.filter(p=>p.status===key).length;
+    c.insertAdjacentHTML("beforeend",
+      `<button class="chip ${S.filter===key?'on':''}" onclick="setFilter('${key}')">${s.label} ${n}</button>`);
+  });
+}
+function setFilter(f){ S.filter=f; renderPipeline(); }
+function renderPipeline(){
+  renderChips();
+  const list=document.getElementById("personList"); list.innerHTML="";
+  const ppl=S.people.filter(p=>S.filter==="all"||p.status===S.filter);
+  document.getElementById("listCounter").textContent=ppl.length+"人表示中";
+  ppl.forEach(p=>{
+    const st=stOf(p.status);
+    const lg=logsOf(p.id);
+    const logs=lg.map(l=>`<div class="log"><div class="meta">${l.d} ・ ${l.dir}</div><div class="body">${esc(l.txt)}</div></div>`).join("");
+    const stbtns=STATUSES.map(s=>`<button class="stbtn ${p.status===s.label?'on':''}" onclick="setStatus('${p.id}','${s.label}')">${s.label}</button>`).join("");
+    list.insertAdjacentHTML("beforeend",`
+    <div class="person" id="card-${p.id}">
+      <div class="row" onclick="toggleCard('${p.id}')">
+        <div><div class="nm">${esc(p.name)}</div>${p.rel?`<div class="rel">${esc(p.rel)}</div>`:""}</div>
+        <span class="badge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}55">${p.status}${lg.length?` ・ ${lg.length}`:""}</span>
+      </div>
+      <div class="detail">
+        <div class="stbtns">${stbtns}</div>
+        <label class="toggle"><input type="checkbox" ${p.linkKnown?"checked":""} onchange="setKnown('${p.id}',this.checked)"> LINKを知っている人</label>
+        <div class="label">やり取りログ(${lg.length}件)</div>
+        ${logs||'<div style="font-size:12px;color:var(--dim);margin-bottom:8px">まだ記録なし</div>'}
+        <div class="logadd">
+          <select id="dir-${p.id}"><option>送信</option><option>返信</option></select>
+          <input id="logtxt-${p.id}" placeholder="内容(要約でOK)">
+        </div>
+        <button class="btn ghost small" onclick="addLog('${p.id}')">ログ追加</button>
+        <div style="height:10px"></div>
+        <textarea placeholder="メモ(次アクション・注意点)" onchange="setMemo('${p.id}',this.value)">${esc(p.memo)}</textarea>
+      </div>
+    </div>`);
+  });
+}
+function toggleCard(id){ document.getElementById("card-"+id).classList.toggle("open"); }
+async function setStatus(id,st){
+  const p=S.people.find(x=>x.id===id); p.status=st;
+  renderAll(); document.getElementById("card-"+id)?.classList.add("open");
+  await apiPost({action:"updatePerson",id:id,status:st});
+}
+async function setKnown(id,v){
+  S.people.find(x=>x.id===id).linkKnown=v;
+  await apiPost({action:"updatePerson",id:id,linkKnown:v});
+}
+async function setMemo(id,v){
+  S.people.find(x=>x.id===id).memo=v;
+  await apiPost({action:"updatePerson",id:id,memo:v});
+}
+async function addLog(id){
+  const txt=document.getElementById("logtxt-"+id).value.trim();
+  if(!txt) return;
+  const dir=document.getElementById("dir-"+id).value;
+  const d=new Date(); const ds=(d.getMonth()+1)+"/"+d.getDate();
+  const p=S.people.find(x=>x.id===id);
+  // 自動昇格ルール
+  let auto=null;
+  if(dir==="送信"&&p.status==="未送信") auto="送信済";
+  if(dir==="返信"){
+    if(p.status==="送信済") auto="返信①";
+    else if(p.status==="返信①") auto="返信②〜";
+  }
+  S.logs.push({logId:"tmp"+Date.now(),personId:id,d:ds,dir:dir,txt:txt});
+  if(auto) p.status=auto;
+  renderAll(); document.getElementById("card-"+id)?.classList.add("open");
+  await apiPost({action:"addLog",personId:id,dir:dir,txt:txt,autoStatus:auto});
+}
+async function addPerson(){
+  const n=document.getElementById("newName").value.trim();
+  if(!n) return;
+  const r=document.getElementById("newRel").value.trim();
+  document.getElementById("newName").value=""; document.getElementById("newRel").value="";
+  const res=await apiPost({action:"addPerson",name:n,rel:r});
+  S.people.push({id:res.result.id,name:n,rel:r,status:"未送信",linkKnown:false,memo:""});
+  renderAll();
+}
+
+// ============ おつなぎ屋 ============
+function renderTodos(){
+  const l=document.getElementById("todoList"); l.innerHTML="";
+  S.todos.forEach(t=>{
+    l.insertAdjacentHTML("beforeend",`
+    <div class="todo ${t.done?'done':''}">
+      <input type="checkbox" ${t.done?"checked":""} onchange="toggleTodo('${t.id}',this.checked)">
+      <div class="t">${esc(t.t)}</div>
+      <button class="del" onclick="delTodo('${t.id}')">×</button>
+    </div>`);
+  });
+  document.getElementById("postDraft").value=S.config.draft||"";
+}
+async function toggleTodo(id,v){
+  S.todos.find(t=>t.id===id).done=v; renderTodos();
+  await apiPost({action:"setTodo",id:id,done:v});
+}
+async function delTodo(id){
+  S.todos=S.todos.filter(t=>t.id!==id); renderTodos();
+  await apiPost({action:"delTodo",id:id});
+}
+async function addTodo(){
+  const v=document.getElementById("newTodo").value.trim();
+  if(!v) return;
+  document.getElementById("newTodo").value="";
+  const res=await apiPost({action:"addTodo",t:v});
+  S.todos.push({id:res.result.id,t:v,done:false});
+  renderTodos();
+}
+async function saveDraft(){
+  S.config.draft=document.getElementById("postDraft").value;
+  await apiPost({action:"setConfig",key:"draft",value:S.config.draft});
+  showToast("下書き保存した",true);
+}
+
+// ============ util ============
+function showToast(msg,ok){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.style.background=ok?"#34d399":"#f87171"; t.style.color=ok?"#052e1c":"#fff";
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",2500);
+}
+function esc(s){ return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function renderAll(){ renderMypage(); renderPipeline(); renderTodos(); }
+init();
+</script>
+</body>
+</html>
